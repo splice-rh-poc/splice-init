@@ -18,7 +18,7 @@ Initialize a cloud instance for Splice.
 
 
 %build
-%configure
+
 
 %install
 rm -rf %{buildroot}
