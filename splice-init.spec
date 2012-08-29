@@ -1,16 +1,13 @@
 Name:       splice-init
-Version:	0.1
-Release:	1%{?dist}
-Summary:	Initialize a cloud instance for Splice.
+Version:    0.2
+Release:    1%{?dist}
+Summary:    Initialize a cloud instance for Splice.
 
-Group:		Development/Languages
-License:	GPLv2+
-URL:		https://github.com/splice/splice-init
-Source0:	%{name}-%{version}.tar.gz
+Group:      Development/Languages
+License:    GPLv2+
+URL:        https://github.com/splice/splice-init
+Source0:    %{name}-%{version}.tar.gz
 
-
-BuildRequires:	
-Requires:	
 
 %description
 Initialize a cloud instance for Splice.
@@ -35,4 +32,7 @@ cp  usr/bin/splice-init %{buildroot}/%{_bindir}/
 
 
 %changelog
+* Wed Aug 29 2012 James Slagle <jslagle@redhat.com> 0.2-1
+- new package built with tito
+
 
