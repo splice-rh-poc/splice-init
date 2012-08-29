@@ -12,24 +12,40 @@
 # http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
 
 
+from ConfigParser import SafeConfigParser
+
 import logging
 import os
 import sys
 import urllib2
+import urlparse
 
+from M2Crypto import X509
+
+
+BASEURL = 'http://169.254.169.254/latest/'
 LOG = logging.getLogger('splice-init')
 LOGFILE = '/var/log/splice-init.log')
+RHICDELIM = '|RHIC|'
+RHSMCONF = '/etc/rhsm/rhsm.conf'
 
-def get_zone():
+
+def query_metadata(url_path):
+    url = urlparse.urljoin(BASEURL, url_path)
+
     try:
-        fp = urllib2.urlopen('http://169.254.169.254/latest/meta-data/placement/availability-zone')
+        fp = urllib2.urlopen(url)
     except urllib2.URLError, e:
         LOG.error("Error getting availability zone from EC2 instance metadata.  "
             "Are you running in EC2?")
         LOG.error(e)
         sys.exit(1)
-    zone = fp.read()
 
+    return fp.read()
+
+
+def get_zone():
+    zone = query_metadata('meta-data/placement/availability-zone')
     LOG.info('Zone [%s]' % zone)
 
     # Remove trailing character from the zone, we only care about the region
@@ -38,12 +54,64 @@ def get_zone():
     return zone
 
 
-def main():
+def get_user_data():
+    user_data = query_metadata('user-data')
+    LOG.info('User Data [%s]' % user_data)
+    return user_data
 
 
+def write_rhic(rhic):
+    cp = SafeConfigParser()
+    cp.read(RHSMCONF)
+    rhic_path = cp.get('splice', 'rhic')
+
+    rhic_file = open(rhic_path, 'w')
+    rhic_file.write(rhic)
+    rhic_file.close()
 
 
-if __name__ == '__main__':
+def get_rhic():
+    user_data = get_user_data()
+
+    delim_split = user_data.split(RHICDELIM)
+
+    # Fuzzy logic to try and determine if a RHIC is in the user data.
+    if len(delim_split) == 1:
+        # Assume the whole user data is the rhic
+        rhic = user_data
+    elif len(delim_split) == 2:
+        # Assume the rhic is everything after the delim in the user data
+        start = user_data.index(RHICDELIM) + 1
+        rhic = user_data[user_data.index(start:)
+    elif len(delim_split == 3:
+        # Assume the rhic is between the 2 delimeters in the user data
+        start = user_data.index(RHICDELIM) + 1
+        end = user_data.rindex(RHICDELIM)
+        rhic = user_data[start:end]
+    else:
+        LOG.error("Couldn't read rhic from user data.")
+        sys.exit(1)
+
+    # Simple string check to make sure the rhic we got appears correct
+    if 'BEGIN CERTIFICATE' not in rhic or \
+       'END CERTIFICATE' not in rhic:
+        LOG.error("Couldn't read rhic from user data.")
+        sys.exit(1)
+        
+    # Finally, parse it with m2crypto as a final verification.
+    try:
+        cert = X509.load_cert_string(rhic)
+    except X509.X509Error, e:
+        LOG.error("Couldn't read rhic from user data.")
+        LOG.error(e)
+        sys.exit(1)
+
+    LOG.info('Read rhic %s' % cert.get_subject().as_text())
+
+    return rhic
+
+
+def configure_logging():
     formatter = logging.Formatter("[%(levelname)s:%(name)s] %(module)s:%(lineno)d %(asctime)s: %(message)s")
 
     console_handler = logging.StreamHandler()
@@ -56,4 +124,22 @@ if __name__ == '__main__':
     LOG.addHandler(file_handler)
     LOG.setLevel(logging.INFO)
 
-    main()
+
+def main():
+    rhic = get_rhic()
+    write_rhic(rhic)
+
+
+if __name__ == '__main__':
+
+    configure_logging()
+
+    try:
+        main()
+    except Exception, e:
+        msg = 'Exception occurred during splice-init run.'
+        LOG.error(msg)
+        LOG.error(e)
+        print >> sys.stderr, msg
+        print >> sys.stderr, e
+        sys.exit(1)
