@@ -1,0 +1,59 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2012 Red Hat, Inc.
+#
+# This software is licensed to you under the GNU General Public
+# License as published by the Free Software Foundation; either version
+# 2 of the License (GPLv2) or (at your option) any later version.
+# There is NO WARRANTY for this software, express or implied,
+# including the implied warranties of MERCHANTABILITY,
+# NON-INFRINGEMENT, or FITNESS FOR A PARTICULAR PURPOSE. You should
+# have received a copy of GPLv2 along with this software; if not, see
+# http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+
+
+import logging
+import os
+import sys
+import urllib2
+
+LOG = logging.getLogger('splice-init')
+LOGFILE = '/var/log/splice-init.log')
+
+def get_zone():
+    try:
+        fp = urllib2.urlopen('http://169.254.169.254/latest/meta-data/placement/availability-zone')
+    except urllib2.URLError, e:
+        LOG.error("Error getting availability zone from EC2 instance metadata.  "
+            "Are you running in EC2?")
+        LOG.error(e)
+        sys.exit(1)
+    zone = fp.read()
+
+    LOG.info('Zone [%s]' % zone)
+
+    # Remove trailing character from the zone, we only care about the region
+    # part, such as us-west-1 or us-west-2, not the actual zone.
+    zone = zone[:-1]
+    return zone
+
+
+def main():
+
+
+
+
+if __name__ == '__main__':
+    formatter = logging.Formatter("[%(levelname)s:%(name)s] %(module)s:%(lineno)d %(asctime)s: %(message)s")
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
+    file_handler = logging.FileHandler(LOGFILE)
+    file_handler.setFormatter(formatter)
+
+    LOG.addHandler(console_handler)
+    LOG.addHandler(file_handler)
+    LOG.setLevel(logging.INFO)
+
+    main()
