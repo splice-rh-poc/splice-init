@@ -25,6 +25,7 @@ Initialize a cloud instance for Splice.
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/%{_initddir}
 cp usr/bin/splice-init %{buildroot}/%{_bindir}/
 cp etc/init.d/splice-init %{buildroot}/%{_initddir}/
 
