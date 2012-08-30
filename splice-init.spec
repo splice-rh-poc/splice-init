@@ -25,12 +25,14 @@ Initialize a cloud instance for Splice.
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/%{_bindir}
-cp  usr/bin/splice-init %{buildroot}/%{_bindir}/
+cp usr/bin/splice-init %{buildroot}/%{_bindir}/
+cp etc/init.d/splice-init %{buildroot}/%{_initddir}/
 
 
 %files
 %defattr(-,root,root,-)
 %{_bindir}/splice-init
+%{_initddir}/splice-init
 
 
 %changelog
