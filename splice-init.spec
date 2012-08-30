@@ -1,5 +1,5 @@
 Name:       splice-init
-Version:    0.2
+Version:    0.3
 Release:    1%{?dist}
 Summary:    Initialize a cloud instance for Splice.
 
@@ -37,6 +37,15 @@ cp etc/init.d/splice-init %{buildroot}/%{_initddir}/
 
 
 %changelog
+* Thu Aug 30 2012 James Slagle <jslagle@redhat.com> 0.3-1
+- Replace REGION string in rhsm conf file (jslagle@redhat.com)
+- Basic init script output (jslagle@redhat.com)
+- Create needed dir (jslagle@redhat.com)
+- Add init script (jslagle@redhat.com)
+- Improved error handling (jslagle@redhat.com)
+- read and write the rhic (jslagle@redhat.com)
+- Remove configure (jslagle@redhat.com)
+
 * Wed Aug 29 2012 James Slagle <jslagle@redhat.com> 0.2-1
 - new package built with tito
 
