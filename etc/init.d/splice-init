@@ -8,9 +8,14 @@
 # Description: Initializes the correct repo depending on the region.
 ### END INIT INFO
 
+# source function library
+. /etc/rc.d/init.d/functions
+
 case "$1" in
     start)
-        /usr/bin/splice-init
+        echo -n $"Starting splice-init: "
+        /usr/bin/splice-init && success || failure
+        echo
 	;;
 esac
 
