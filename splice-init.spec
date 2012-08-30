@@ -8,6 +8,8 @@ License:    GPLv2+
 URL:        https://github.com/splice/splice-init
 Source0:    %{name}-%{version}.tar.gz
 
+Requires:   m2crypto
+
 
 %description
 Initialize a cloud instance for Splice.
