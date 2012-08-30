@@ -17,10 +17,11 @@ from ConfigParser import SafeConfigParser
 
 import logging
 import os
+import subprocess
 import sys
+import traceback
 import urllib2
 import urlparse
-import traceback
 
 from M2Crypto import X509
 
@@ -44,14 +45,23 @@ def query_metadata(url_path):
     return fp.read()
 
 
-def get_zone():
+def get_region():
     zone = query_metadata('meta-data/placement/availability-zone')
     LOG.info('Zone [%s]' % zone)
 
     # Remove trailing character from the zone, we only care about the region
     # part, such as us-west-1 or us-west-2, not the actual zone.
-    zone = zone[:-1]
-    return zone
+    region = zone[:-1]
+    return region
+
+
+def set_region():
+    region = get_region()
+
+    cmd = [ 'sed', '-i', 's/REGION/%s/g' % region, RHSMCONF]
+    ret_code = subprocess.call(cmd)
+    if ret_code != 0:
+        raise Exception('Error setting region in %s' % RHSMCONF)
 
 
 def get_user_data():
@@ -129,15 +139,14 @@ def handle_exception(e, msg):
     tb = traceback.format_tb(ei[2])
     LOG.error(msg)
     LOG.error(e)
-    if e.message:
-        LOG.error(e.message)
-    LOG.error('\n'.join(tb))
+    LOG.error(''.join(tb))
     sys.exit(1)
     
 
 def main():
     rhic = get_rhic()
     write_rhic(rhic)
+    set_region()
 
 
 if __name__ == '__main__':
